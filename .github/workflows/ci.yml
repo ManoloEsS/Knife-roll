@@ -12,10 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
-          cache: 'npm'
       - run: cd knife-roll_backend && npm ci
       - run: cd knife-roll_backend && npm run lint
 
@@ -24,10 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
-          cache: 'npm'
       - run: cd knife-roll_frontend && npm ci
       - run: cd knife-roll_frontend && npm run lint
 
@@ -36,9 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
-          cache: 'npm'
       - run: cd knife-roll_backend && npm ci
       - run: cd knife-roll_backend && npx tsc --noEmit
