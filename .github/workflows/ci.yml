@@ -38,4 +38,5 @@ jobs:
         with:
           node-version: '22'
       - run: cd knife-roll_backend && npm ci
+      - run: cd knife-roll_backend && npx prisma generate
       - run: cd knife-roll_backend && npx tsc --noEmit
