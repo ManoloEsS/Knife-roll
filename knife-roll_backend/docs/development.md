@@ -377,3 +377,15 @@ All future schema changes should create new migrations via `npm run db:migrate`.
 | `build:ui` | `cd ../knife-roll_frontend/ && npm run build` | Build frontend into `dist/public/` |
 | `build:full` | `rm -rf dist && npm run build:ui && npm run build` | Full production build |
 | `start` | `node dist/index.js` | Start production server |
+
+---
+
+## TODO: Render Deployment Setup
+
+- [ ] Add `db:deploy:prod` script (`prisma migrate deploy` without dotenv)
+- [ ] Add `start:prod` script (`npx prisma migrate deploy && node dist/index.js`)
+- [ ] Add `prisma generate` to the build process
+- [ ] Configure Render environment variables (`DATABASE_URL`, `PORT`)
+- [ ] Set up Render build command (may need monorepo-specific adjustments)
+- [ ] Review `prisma.config.ts` behavior without `.env` file
+- [ ] Test the full deployment flow on Render
