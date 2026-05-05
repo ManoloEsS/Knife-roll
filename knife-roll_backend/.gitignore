@@ -6,7 +6,7 @@ dist
 .env.local
 .env.*.local
 
-/generated/prisma
+/src/generated/prisma
 
 *.log
 npm-debug.log*

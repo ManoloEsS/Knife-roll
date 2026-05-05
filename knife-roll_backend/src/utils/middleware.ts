@@ -1,5 +1,6 @@
 import morgan from 'morgan'
 import { NextFunction, Request, Response } from 'express'
+import { Prisma } from '../generated/prisma/client'
 
 morgan.token('body', (req: Request) => {
     if (!req.body || typeof req.body !== 'object') {
@@ -23,10 +24,13 @@ export const unknownEndpoint = (_req: Request, res: Response) => {
 export const errorHandler = (error: Error, _req: Request, res: Response, next: NextFunction) => {
     console.error(error.message)
 
-    if (error.name === 'CastError') {
-        return res.status(400).send({ error: 'malformatted id' })
-    } else if (error.name === 'ValidationError') {
-        return res.status(400).json({ errors: error.message })
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+            return res.status(409).json({ error: 'Duplicate entry', fields: error.meta?.target })
+        }
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: 'Record not found' })
+        }
     }
     next(error)
 }

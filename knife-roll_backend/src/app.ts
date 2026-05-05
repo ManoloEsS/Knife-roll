@@ -4,7 +4,7 @@ import { router } from './controllers'
 
 export const app = express()
 
-app.use(express.static('dist'))
+app.use(express.static('dist/public'))
 app.use(express.json())
 app.use(requestLogger)
 
