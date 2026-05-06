@@ -17,4 +17,49 @@ model User {
   email String @unique
   name String?
   admin Boolean
+  schedules Schedule[]
+  scheduledHours Int @default(0) @map("scheduled_hours")
+  shifts Shift[]
+
+  @@map("users")
 }
+
+model Schedule {
+  id Int @id @default(autoincrement())
+  startDate DateTime @map("start_date")
+  endDate DateTime @map("end_date")
+  createdBy Int @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [createdBy], references: [id])
+  shifts Shift[]
+
+  @@map("schedules")
+}
+
+model Shift {
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now()) @map("created_at")
+  startTime DateTime @map("start_time")
+  endTime DateTime @map("end_time")
+  scheduleId Int @map("schedule_id")
+  userId Int? @map("user_id") 
+  stationName String @map("station")
+  available Boolean @default(true)
+
+  schedule Schedule @relation(fields: [scheduleId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
+  station Station @relation(fields: [stationName], references: [name])
+
+  @@map("shifts")
+}
+
+model Station {
+  id Int @id @default(autoincrement())
+  name String @unique
+  shifts Shift[]
+
+  @@map("stations")
+}
+
+
