@@ -1,5 +1,4 @@
 import express, { Response, Request } from 'express'
-import { prisma } from '../utils/db'
 
 export const router = express.Router()
 
