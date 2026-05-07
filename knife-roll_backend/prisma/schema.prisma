@@ -31,7 +31,7 @@ model Schedule {
   createdBy Int @map("created_by")
   createdAt DateTime @default(now()) @map("created_at")
 
-  user User @relation(fields: [createdBy], references: [id])
+  user User @relation(fields: [createdBy], references: [id], onDelete: Restrict)
   shifts Shift[]
 
   @@map("schedules")
@@ -47,9 +47,9 @@ model Shift {
   stationName String @map("station")
   available Boolean @default(true)
 
-  schedule Schedule @relation(fields: [scheduleId], references: [id])
-  user User? @relation(fields: [userId], references: [id])
-  station Station @relation(fields: [stationName], references: [name])
+  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  station Station @relation(fields: [stationName], references: [name], onDelete: Restrict)
 
   @@map("shifts")
 }
