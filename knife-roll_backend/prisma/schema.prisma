@@ -16,7 +16,7 @@ model User {
   id Int @id @default(autoincrement())
   email String @unique
   name String?
-  admin Boolean
+  admin Boolean @default(false)
   schedules Schedule[]
   scheduledHours Int @default(0) @map("scheduled_hours")
   shifts Shift[]
