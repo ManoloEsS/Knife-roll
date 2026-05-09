@@ -1,5 +1,7 @@
 import express, { Response, Request } from 'express'
 import { prisma } from '../utils/db'
+import { validate } from '../utils/middleware'
+import { CreateUserSchema } from '../utils/schemas'
 
 export const usersRouter = express.Router()
 
@@ -8,8 +10,8 @@ usersRouter.get('/', async (_req: Request, res: Response) => {
     res.json(users)
 })
 
-usersRouter.post('/', async (req: Request, res: Response) => {
+usersRouter.post('/', validate(CreateUserSchema), async (req: Request, res: Response) => {
     const { name, email, admin } = req.body
     const user = await prisma.user.create({ data: { name, email, admin } })
-    res.json(user)
+    res.status(201).json(user)
 })

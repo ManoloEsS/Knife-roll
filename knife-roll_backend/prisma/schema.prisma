@@ -20,6 +20,7 @@ model User {
   schedules Schedule[]
   scheduledHours Int @default(0) @map("scheduled_hours")
   shifts Shift[]
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@map("users")
 }

@@ -7,10 +7,13 @@ This document explains the architectural decisions made during the initial setup
 - [Database Connection (Prisma 7)](#database-connection-prisma-7)
 - [Using Prisma Client in Routes](#using-prisma-client-in-routes)
 - [Error Handling](#error-handling)
+- [Router Structure](#router-structure)
+- [Request Validation (Zod)](#request-validation-zod)
 - [Environment Variables](#environment-variables)
 - [Project Structure](#project-structure)
 - [Static File Serving & Security](#static-file-serving--security)
 - [TypeScript Configuration](#typescript-configuration)
+- [Database Migrations](#database-migrations)
 - [NPM Scripts Explained](#npm-scripts-explained)
 
 ---
@@ -91,16 +94,26 @@ All methods return Promises, so route handlers using them must be `async`.
 
 ### Route Handler Pattern
 
-Import the `prisma` singleton from `src/utils/db.ts` and use it in your routes:
+Import the `prisma` singleton from `src/utils/db.ts` and use it in your routes. Routes are defined in sub-router files under `src/controllers/`:
 
 ```ts
+// controllers/users.ts
 import { prisma } from '../utils/db'
+import { validate } from '../utils/middleware'
+import { CreateUserSchema } from '../utils/schemas'
 
-router.get('/users', async (_req: Request, res: Response) => {
+usersRouter.get('/', async (_req, res) => {
     const users = await prisma.user.findMany()
     res.json(users)
 })
+
+usersRouter.post('/', validate(CreateUserSchema), async (req, res) => {
+    const user = await prisma.user.create({ data: req.body })
+    res.status(201).json(user)
+})
 ```
+
+For POST routes, the `validate()` middleware runs first. If the request body doesn't match the schema, it returns a 400 error. If valid, `req.body` is replaced with parsed data and the route handler runs.
 
 ### No Try/Catch Needed (Express 5)
 
@@ -189,6 +202,167 @@ export const errorHandler = (error: Error, _req: Request, res: Response, next: N
 
 ---
 
+## Router Structure
+
+### /api Prefix
+
+All API routes are mounted under `/api` in `app.ts`:
+
+```ts
+app.use('/api', router)
+```
+
+This separates API routes from static frontend files. Static assets are served from `dist/public/`, and API routes are always accessed via `/api/*`. This prevents conflicts between frontend paths (e.g., `/users`) and API paths (e.g., `/api/users`).
+
+### Sub-Routers per Resource
+
+Each resource has its own router file in `src/controllers/`. The main router (`controllers/index.ts`) is a barrel file that imports and mounts all sub-routers:
+
+```ts
+// controllers/index.ts
+import express from 'express'
+import { healthRouter } from './health'
+import { usersRouter } from './users'
+import { schedulesRouter } from './schedules'
+import { shiftsRouter } from './shifts'
+import { stationsRouter } from './stations'
+
+export const router = express.Router()
+
+router.use('/health', healthRouter)
+router.use('/users', usersRouter)
+router.use('/schedules', schedulesRouter)
+router.use('/shifts', shiftsRouter)
+router.use('/stations', stationsRouter)
+```
+
+### Route Table
+
+| Method | Full URL | Handler File | Description |
+|---|---|---|---|
+| GET | `/api/health` | `health.ts` | Health check |
+| GET | `/api/users` | `users.ts` | List all users |
+| GET | `/api/users/:id` | `users.ts` | Get user by ID |
+| POST | `/api/users` | `users.ts` | Create a user |
+| GET | `/api/schedules` | `schedules.ts` | List all schedules (with shifts and user) |
+| GET | `/api/schedules/:id` | `schedules.ts` | Get schedule by ID (with shifts) |
+| POST | `/api/schedules` | `schedules.ts` | Create a schedule |
+| GET | `/api/shifts` | `shifts.ts` | List all shifts (with schedule, user, station) |
+| GET | `/api/shifts/:id` | `shifts.ts` | Get shift by ID |
+| POST | `/api/shifts` | `shifts.ts` | Create a shift |
+| PATCH | `/api/shifts/:id/pickup` | `shifts.ts` | Pick up a shift (assign user) |
+| GET | `/api/stations` | `stations.ts` | List all stations (with shifts) |
+| POST | `/api/stations` | `stations.ts` | Create a station |
+
+### Why Sub-Routers?
+
+- **Separation of concerns**: Each file handles one resource. Easy to find, easy to maintain.
+- **Barrel file pattern**: `controllers/index.ts` is the single import source for `app.ts`. Adding a new router means creating a file and adding one line to the barrel file.
+- **Route prefix isolation**: Inside `users.ts`, routes are defined relative to `/users` (`router.get('/')`, `router.get('/:id')`). The full path is determined by where the router is mounted in `index.ts`.
+- **Middleware per route**: Validation middleware is applied per route: `router.post('/', validate(CreateUserSchema), async (req, res) => { ... })`.
+
+### Middleware Chain in Routes
+
+Express processes route handlers left to right. The `validate()` middleware runs before the route handler:
+
+```ts
+router.post('/', validate(CreateUserSchema), async (req, res) => {
+    // validate() already ran — req.body is parsed and type-safe
+    const user = await prisma.user.create({ data: req.body })
+    res.status(201).json(user)
+})
+```
+
+If validation fails, `validate()` sends a 400 response and the route handler never runs. If validation passes, `req.body` is replaced with parsed data (including defaults) and `next()` calls the route handler.
+
+---
+
+## Request Validation (Zod)
+
+### Why Zod?
+
+[Zod](https://zod.dev) is a TypeScript-first schema validation library used to validate incoming request bodies. It provides:
+
+- **Runtime validation**: Catches missing or invalid fields before they reach Prisma
+- **Type inference**: Zod schemas automatically infer TypeScript types — no need to maintain separate type definitions
+- **Structured error messages**: Validation errors are returned as a tree structure via `z.treeifyError()`
+- **Defaults**: Fields like `admin: z.boolean().default(false)` are set automatically
+
+### Why Not Use Prisma Types Directly?
+
+Prisma generates types like `Prisma.UserCreateInput`, but these include all fields (including `id`, `createdAt`, `scheduledHours`). Using them as request body types would allow clients to send fields they shouldn't (over-posting). Zod schemas define exactly what the API accepts — the single source of truth for input validation.
+
+### Schema Definitions
+
+All Zod schemas are defined in `src/utils/schemas.ts`:
+
+```ts
+import { z } from 'zod'
+
+export const CreateUserSchema = z.object({
+  email: z.string().email(),
+  name: z.string().optional(),
+  admin: z.boolean().default(false),
+})
+
+export const CreateScheduleSchema = z.object({
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime(),
+  createdBy: z.number().int(),
+})
+
+export const CreateShiftSchema = z.object({
+  startTime: z.string().datetime(),
+  endTime: z.string().datetime(),
+  scheduleId: z.number().int(),
+  stationName: z.string(),
+  available: z.boolean().default(true),
+})
+
+export const PickUpShiftSchema = z.object({
+  userId: z.number().int(),
+})
+
+export const CreateStationSchema = z.object({
+  name: z.string().min(1),
+})
+```
+
+**Key decisions:**
+- `id` and `createdAt` are NOT in schemas — they're auto-generated by the database
+- `createdBy` on Schedule accepts a user ID (until auth is added, then it will come from the session)
+- `userId` on Shift is NOT in `CreateShiftSchema` — shifts are created unassigned and picked up via `PATCH /api/shifts/:id/pickup`
+- `z.string().datetime()` validates ISO 8601 datetime strings; Prisma converts them to `DateTime`
+- `available` defaults to `true` via `z.boolean().default(true)`
+
+### The validate() Middleware
+
+The `validate()` function in `src/utils/middleware.ts` is a factory that takes a Zod schema and returns Express middleware:
+
+```ts
+import { z } from 'zod'
+
+export const validate = (schema: z.ZodSchema) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+        const parsed = schema.safeParse(req.body)
+        if (!parsed.success) {
+            return res.status(400).json({ error: z.treeifyError(parsed.error) })
+        }
+        req.body = parsed.data
+        next()
+    }
+}
+```
+
+Flow:
+1. `safeParse()` validates `req.body` against the schema — returns `{ success: true, data }` or `{ success: false, error }`
+2. If invalid → returns 400 with the error tree, route handler never runs
+3. If valid → `req.body` is replaced with parsed data (including applied defaults like `admin: false`), then `next()` calls the route handler
+
+**Note:** `z.treeifyError()` is the Zod v4 way to format errors. The v3 method `parsed.error.flatten()` is deprecated.
+
+---
+
 ## Environment Variables
 
 ### Development
@@ -219,18 +393,25 @@ The `start` script runs `node dist/index.js` with no `dotenv-cli` wrapper. The a
 ```
 knife-roll_backend/
 ├── prisma/
-│   └── schema.prisma          # Prisma schema (models, generator, datasource)
+│   ├── schema.prisma          # Prisma schema (models, generator, datasource)
+│   └── migrations/            # Database migration files (committed to git)
 ├── prisma.config.ts            # Prisma CLI config (datasource URL for CLI commands)
 ├── src/
 │   ├── generated/
 │   │   └── prisma/             # Prisma generated client (gitignored)
 │   ├── controllers/
-│   │   └── index.ts            # API routes
+│   │   ├── index.ts            # Barrel file — re-exports and mounts sub-routers
+│   │   ├── health.ts           # GET /api/health
+│   │   ├── users.ts           # /api/users routes
+│   │   ├── schedules.ts       # /api/schedules routes
+│   │   ├── shifts.ts          # /api/shifts routes
+│   │   └── stations.ts        # /api/stations routes
 │   ├── utils/
 │   │   ├── config.ts           # PORT, dotenv setup
 │   │   ├── db.ts               # PrismaClient instance (adapter pattern)
 │   │   ├── logger.ts           # Logging utility
-│   │   └── middleware.ts        # Express middleware
+│   │   ├── middleware.ts        # Express middleware (requestLogger, errorHandler, validate)
+│   │   └── schemas.ts          # Zod validation schemas
 │   ├── app.ts                  # Express app setup
 │   └── index.ts                # Entry point
 ├── dist/                        # Compiled output (gitignored)
@@ -260,6 +441,7 @@ We separated frontend and backend output:
 - **Frontend** (Vite): Builds into `dist/public/` via `vite.config.ts` `outDir`
 - **Backend** (TypeScript): Compiles into `dist/` (top level)
 - **Express**: Serves only `dist/public/` via `express.static('dist/public')`
+- **API routes**: Mounted at `/api` via `app.use('/api', router)`
 
 This way, only frontend static assets (HTML, CSS, JS bundles) are publicly accessible. Backend server code lives in `dist/` but outside `dist/public/`, so it's never served as a static file.
 
@@ -282,7 +464,8 @@ The `build:full` command:
 |---|---|---|
 | `/` | `dist/public/index.html` | Express static middleware |
 | `/assets/app.js` | `dist/public/assets/app.js` | Express static middleware |
-| `/api/items` | Route handler | Express router |
+| `/api/users` | Route handler | Express router at `/api` |
+| `/api/schedules` | Route handler | Express router at `/api` |
 | `/index.js` | 404 (unknown endpoint) | NOT in `dist/public/` |
 | `/utils/db.js` | 404 (unknown endpoint) | NOT in `dist/public/` |
 

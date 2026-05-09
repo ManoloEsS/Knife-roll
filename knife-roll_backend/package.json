@@ -8,14 +8,17 @@
     "db:start": "docker start postgres18 || docker run -d --name postgres18 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=postgres -v knife_roll_dev:/var/lib/postgresql -p 5432:5432 postgres:18",
     "db:migrate": "dotenv -e .env.development -- prisma migrate dev",
     "db:deploy": "dotenv -e .env.development -- prisma migrate deploy",
+    "db:deploy:prod": "dotenv -e .env -- prisma migrate deploy",
     "db:generate": "prisma generate",
     "dev:full": "npm run db:start && npm run db:generate && npm run dev",
     "build": "npx tsc",
     "start": "node dist/index.js",
+    "start:prod": "npx prisma migrate deploy && node dist/index.js",
     "lint": "eslint .",
     "build:ui": "cd ../knife-roll_frontend/ && npm run build",
     "build:full": "rm -rf dist && npm run build:ui && npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "prisma generate && npx dotenv-cli -e .env.test -- npx prisma migrate deploy && vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -23,10 +26,12 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
+    "@prisma/extension-accelerate": "^3.0.1",
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
     "morgan": "^1.10.1",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -35,13 +40,16 @@
     "@types/morgan": "^1.9.10",
     "@types/node": "^25.5.2",
     "@types/pg": "^8.20.0",
+    "@types/supertest": "^7.2.0",
     "dotenv-cli": "^11.0.0",
     "eslint": "^10.1.0",
     "globals": "^17.4.0",
     "nodemon": "^3.1.14",
     "prisma": "^7.7.0",
+    "supertest": "^7.2.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.2"
+    "typescript-eslint": "^8.57.2",
+    "vitest": "^4.1.5"
   }
 }
