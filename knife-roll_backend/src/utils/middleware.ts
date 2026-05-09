@@ -1,6 +1,7 @@
 import morgan from 'morgan'
 import { NextFunction, Request, Response } from 'express'
 import { Prisma } from '../generated/prisma/client'
+import { z } from 'zod'
 
 morgan.token('body', (req: Request) => {
     if (!req.body || typeof req.body !== 'object') {
@@ -31,6 +32,20 @@ export const errorHandler = (error: Error, _req: Request, res: Response, next: N
         if (error.code === 'P2025') {
             return res.status(404).json({ error: 'Record not found' })
         }
+        if (error.code === 'P2003') {
+            return res.status(400).json({ error: 'Foreign key constraint failed' })
+        }
     }
     next(error)
+}
+
+export const validate = (schema: z.ZodSchema) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+        const parsed = schema.safeParse(req.body)
+        if (!parsed.success) {
+            return res.status(400).json({ error: z.treeifyError(parsed.error) })
+        }
+        req.body = parsed.data
+        next()
+    }
 }
