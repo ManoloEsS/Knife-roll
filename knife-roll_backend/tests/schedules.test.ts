@@ -4,12 +4,14 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 
 const api = supertest(app)
 
-describe('POST /api/schedules', () => {
+beforeAll(connectDb)
+afterAll(async () => {
+    await clearDb()
+    await disconnectDb()
+})
+
+describe('/api/schedules', () => {
     let userId: number
-
-    beforeAll(connectDb)
-
-    afterAll(disconnectDb)
 
     beforeEach(async () => {
         await clearDb()
@@ -110,20 +112,6 @@ describe('POST /api/schedules', () => {
         expect(response.body).toHaveProperty('id')
         expect(response.body.foo).toBeUndefined()
     })
-})
-
-describe('GET /api/schedules', () => {
-    let userId: number
-
-    beforeAll(connectDb)
-
-    afterAll(disconnectDb)
-
-    beforeEach(async () => {
-        await clearDb()
-        const user = await createAdmin()
-        userId = user.id
-    })
 
     it('retrieve empty schedule array', async () => {
         const responseGet = await api
@@ -151,6 +139,18 @@ describe('GET /api/schedules', () => {
 
     })
 
+    it('rejects non-integer createdBy', async () => {
+    })
+
+    it('accepts startDate equal to endDate', async () => {
+    })
+
+    it('rejects non-integer createdBy', async () => {
+    })
+
+    it('accepts startDate equal to endDate', async () => {
+    })
+
     it('retrieve valid schedule list', async () => {
         const responsePostFirst = await api
             .post('/api/schedules')
@@ -176,5 +176,11 @@ describe('GET /api/schedules', () => {
 
         expect(responseGet.body.sort((a, b) => a.startDate.localeCompare(b.startDate)))
             .toMatchObject([responsePostFirst.body, responsePostSecond.body])
+    })
+
+    it('deletes an existing schedule', async () => {
+    })
+
+    it('returns 404 when deleting non-existent schedule', async () => {
     })
 })

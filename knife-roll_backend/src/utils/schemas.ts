@@ -20,19 +20,21 @@ export const CreateUserSchema = z.object({
 }).strict()
 
 
-// CreateShiftSchema
-// - startTime: z.string().datetime()
-// - endTime: z.string().datetime()
-// - stationName: z.string().min(1)
-// - incentive: z.number().positive().multipleOf(0.01).nullable().optional()
-// - userId: z.number().int().optional()
-// - status: z.enum(['available', 'assigned', 'pending']).default('available')
-// - refinement: endTime >= startTime
-// - strict()
+export const CreateShiftSchema = z.object({
+    startTime: z.iso.datetime(),
+    endTime: z.iso.datetime(),
+    stationName: z.string().min(1),
+    incentive: z.number().nonnegative().multipleOf(0.01).nullable().optional(),
+    userId: z.number().int().optional(),
+    status: z.enum(['available', 'assigned', 'pending']).default('available')
+}).refine(data => data.endTime >= data.startTime, {
+    message: 'endTime must be greater than or equal to startTime',
+    path: ['endTime'],
+})
 
-// CreateStationSchema
-// - name: z.string().min(1)
-// - strict()
+export const CreateStationSchema = z.object({
+    name: z.string().min(1),
+}).strict()
 
 // PickUpShiftSchema (US-14)
 // (no body needed - empty)

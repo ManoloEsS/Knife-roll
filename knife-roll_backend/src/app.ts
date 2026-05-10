@@ -4,6 +4,7 @@ import { router } from './controllers/index'
 import { healthRouter } from './controllers/health'
 import { usersRouter } from './controllers/users'
 import { schedulesRouter } from './controllers/schedules'
+import { stationsRouter } from './controllers/stations'
 
 export const app = express()
 
@@ -15,6 +16,7 @@ app.use('/', router)
 app.use('/health', healthRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/schedules', schedulesRouter)
+app.use('/api/stations', stationsRouter)
 
 
 app.use(unknownEndpoint)
