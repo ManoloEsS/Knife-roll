@@ -20,10 +20,6 @@ export const clearDb = async () => {
 
 export const createAdmin = async (): Promise<User> => {
     return await prisma.user.create({
-        data: {
-            email: 'admin@test.com',
-            name: 'Admin',
-            admin: true,
-        },
+        data: { email: 'admin@test.com', name: 'Admin', admin: true },
     })
 }

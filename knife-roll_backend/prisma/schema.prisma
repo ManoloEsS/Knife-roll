@@ -12,6 +12,12 @@ datasource db {
   provider = "postgresql"
 }
 
+enum ShiftStatus {
+  available
+  assigned
+  pending
+}
+
 model User {
   id Int @id @default(autoincrement())
   email String @unique
@@ -46,7 +52,8 @@ model Shift {
   scheduleId Int @map("schedule_id")
   userId Int? @map("user_id") 
   stationName String @map("station")
-  available Boolean @default(true)
+  status ShiftStatus @default(available)
+  incentive Float? @default(0)
 
   schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -58,7 +65,7 @@ model Shift {
 model Station {
   id Int @id @default(autoincrement())
   name String @unique
-  shifts Shift[]
+  shifts Shift[] // Virtual relation field — not a DB column, but enables include: { shifts: true } and nested writes
 
   @@map("stations")
 }
