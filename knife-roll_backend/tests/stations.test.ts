@@ -5,8 +5,6 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 const api = supertest(app)
 
 describe('/api/stations', () => {
-    let userId: number
-
     beforeAll(connectDb)
 
     afterAll(async () => {
@@ -16,24 +14,23 @@ describe('/api/stations', () => {
 
     beforeEach(async () => {
         await clearDb()
-        const user = await createAdmin()
-        userId = user.id
+        await createAdmin()
     })
 
     it('creates a valid station', async () => {
         const response = await api
             .post('/api/stations')
             .send({
-                name: "grill"
+                name: 'grill'
             })
             .expect(201)
 
         expect(response.body).toHaveProperty('id')
-        expect(response.body).toMatchObject({ name: "grill" })
+        expect(response.body).toMatchObject({ name: 'grill' })
     })
 
     it('gets all stations', async () => {
-        for (const s of ["grill", "sautee", "pantry"]) {
+        for (const s of ['grill', 'sautee', 'pantry']) {
             await api
                 .post('/api/stations')
                 .send({
@@ -47,7 +44,7 @@ describe('/api/stations', () => {
             .expect(200)
 
         expect(stations.body.sort((a, b) => a.name.localeCompare(b.name)))
-            .toMatchObject([{ name: "grill" }, { name: "pantry" }, { name: "sautee" }])
+            .toMatchObject([{ name: 'grill' }, { name: 'pantry' }, { name: 'sautee' }])
 
     })
 
@@ -63,7 +60,7 @@ describe('/api/stations', () => {
         await api
             .post('/api/stations')
             .send({
-                name: "grill"
+                name: 'grill'
             })
             .expect(201)
 
@@ -75,7 +72,7 @@ describe('/api/stations', () => {
             .get('/api/stations')
             .expect(200)
 
-        expect(validate.body).not.toContainEqual({ name: "grill" })
+        expect(validate.body).not.toContainEqual({ name: 'grill' })
     })
 
     it('returns 204 when deleting non existent station', async () => {
@@ -87,7 +84,7 @@ describe('/api/stations', () => {
             .get('/api/stations')
             .expect(200)
 
-        expect(validate.body).not.toContainEqual({ name: "grill" })
+        expect(validate.body).not.toContainEqual({ name: 'grill' })
 
     })
 
