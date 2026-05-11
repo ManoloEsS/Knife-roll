@@ -21,7 +21,7 @@ usersRouter.post('/', validate(CreateUserSchema), async (req: Request, res: Resp
 
     const { name, email, admin } = req.body
     const user = await prisma.user.create({ data: { name, email, admin, password: defaultPassHash } })
-    const { password, ...userWithoutPassword } = user
+    const { password: _password, ...userWithoutPassword } = user
 
     res.status(201).json(userWithoutPassword)
 })
