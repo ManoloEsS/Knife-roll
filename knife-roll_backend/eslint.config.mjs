@@ -40,6 +40,7 @@ export default [
     },
     rules: {
       ...tseslint.configs.recommended[0].rules,
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@stylistic/js/indent': ['error', 4],
       '@stylistic/js/linebreak-style': ['error', 'unix'],
       '@stylistic/js/quotes': ['error', 'single'],
