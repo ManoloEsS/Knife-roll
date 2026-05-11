@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "dotenv -e .env.development -- nodemon --watch src --ext ts --exec tsx src/index.ts",
+    "dev": "dotenv -e .env.development -- nodemon --exec tsx src/index.ts",
     "db:start": "docker start postgres18 || docker run -d --name postgres18 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=postgres -v knife_roll_dev:/var/lib/postgresql -p 5432:5432 postgres:18",
     "db:migrate": "dotenv -e .env.development -- prisma migrate dev",
     "db:deploy": "dotenv -e .env.development -- prisma migrate deploy",
