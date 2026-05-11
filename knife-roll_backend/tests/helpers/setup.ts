@@ -1,4 +1,5 @@
 import { prisma } from '../../src/utils/db'
+import bcrypt from 'bcrypt'
 import type { User } from '../../src/generated/prisma/client'
 
 export { app } from '../../src/app'
@@ -19,7 +20,8 @@ export const clearDb = async () => {
 }
 
 export const createAdmin = async (): Promise<User> => {
+    const passwordHash = await bcrypt.hash(process.env.DEFAULT_PASSWORD!, 12)
     return await prisma.user.create({
-        data: { email: 'admin@test.com', name: 'Admin', admin: true },
+        data: { email: 'admin@test.com', name: 'Admin', admin: true, password: passwordHash },
     })
 }

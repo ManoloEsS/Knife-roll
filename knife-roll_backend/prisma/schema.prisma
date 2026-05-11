@@ -22,6 +22,8 @@ model User {
   id Int @id @default(autoincrement())
   email String @unique
   name String?
+  password String
+  mustChangePassword Boolean @default(true) @map("must_change_password")
   admin Boolean @default(false)
   schedules Schedule[]
   scheduledHours Int @default(0) @map("scheduled_hours")
