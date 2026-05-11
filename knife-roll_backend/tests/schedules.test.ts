@@ -19,7 +19,7 @@ describe('/api/schedules', () => {
         userId = user.id
     })
 
-    it('creates a valid schedule', async () => {
+    it('creates a valid schedule /POST', async () => {
         const response = await api
             .post('/api/schedules')
             .send({
@@ -35,7 +35,7 @@ describe('/api/schedules', () => {
         expect(response.body.createdBy).toBe(userId)
     })
 
-    it('rejects missing startDate', async () => {
+    it('rejects missing startDate /POST', async () => {
         const response = await api
             .post('/api/schedules')
             .send({
@@ -47,7 +47,7 @@ describe('/api/schedules', () => {
         expect(response.body.error).toBeDefined()
     })
 
-    it('rejects missing endDate', async () => {
+    it('rejects missing endDate /POST', async () => {
         const response = await api
             .post('/api/schedules')
             .send({
@@ -59,7 +59,7 @@ describe('/api/schedules', () => {
         expect(response.body.error).toBeDefined()
     })
 
-    it('rejects endDate before startDate', async () => {
+    it('rejects endDate before startDate /POST', async () => {
         const response = await api
             .post('/api/schedules')
             .send({
@@ -72,7 +72,7 @@ describe('/api/schedules', () => {
         expect(response.body.error).toBeDefined()
     })
 
-    it('rejects invalid date format', async () => {
+    it('rejects invalid date format /POST', async () => {
         const response = await api
             .post('/api/schedules')
             .send({
@@ -85,7 +85,7 @@ describe('/api/schedules', () => {
         expect(response.body.error).toBeDefined()
     })
 
-    it('rejects non-existent createdBy user', async () => {
+    it('rejects non-existent createdBy user /POST', async () => {
         const response = await api
             .post('/api/schedules')
             .send({
@@ -98,7 +98,7 @@ describe('/api/schedules', () => {
         expect(response.body.error).toBeDefined()
     })
 
-    it('ignores extra fields', async () => {
+    it('ignores extra fields /POST', async () => {
         const response = await api
             .post('/api/schedules')
             .send({
@@ -113,7 +113,7 @@ describe('/api/schedules', () => {
         expect(response.body.foo).toBeUndefined()
     })
 
-    it('retrieve empty schedule array', async () => {
+    it('retrieve empty schedule array /GET', async () => {
         const responseGet = await api
             .get('/api/schedules')
             .expect(200)
@@ -121,7 +121,7 @@ describe('/api/schedules', () => {
         expect(responseGet.body).toMatchObject([])
     })
 
-    it('retrieve valid schedule', async () => {
+    it('retrieve valid schedule /GET', async () => {
         const responsePost = await api
             .post('/api/schedules')
             .send({
@@ -139,19 +139,19 @@ describe('/api/schedules', () => {
 
     })
 
-    it('rejects non-integer createdBy', async () => {
+    it('rejects non-integer createdBy /POST', async () => {
     })
 
-    it('accepts startDate equal to endDate', async () => {
+    it('accepts startDate equal to endDate /POST', async () => {
     })
 
-    it('rejects non-integer createdBy', async () => {
+    it('rejects non-integer createdBy /POST', async () => {
     })
 
-    it('accepts startDate equal to endDate', async () => {
+    it('accepts startDate equal to endDate /POST', async () => {
     })
 
-    it('retrieve valid schedule list', async () => {
+    it('retrieve valid schedule list /GET', async () => {
         const responsePostFirst = await api
             .post('/api/schedules')
             .send({
@@ -178,9 +178,55 @@ describe('/api/schedules', () => {
             .toMatchObject([responsePostFirst.body, responsePostSecond.body])
     })
 
-    it('deletes an existing schedule', async () => {
+    it('deletes an existing schedule /DELETE', async () => {
     })
 
-    it('returns 404 when deleting non-existent schedule', async () => {
+    it('returns 404 when deleting non-existent schedule /DELETE', async () => {
+    })
+
+    it('returns searched for schedule /GET', async () => {
+        const responsePostFirst = await api
+            .post('/api/schedules')
+            .send({
+                startDate: '2026-05-05',
+                endDate: '2026-05-11',
+                createdBy: userId,
+            })
+            .expect(201)
+
+        const responsePostSecond = await api
+            .post('/api/schedules')
+            .send({
+                startDate: '2026-06-05',
+                endDate: '2026-06-11',
+                createdBy: userId,
+            })
+            .expect(201)
+
+        const searchResult = await api
+            .get('/api/schedules/search?startDate=2026-05-05')
+            .expect(200)
+
+        expect(searchResult.body).toHaveLength(1)
+        expect(searchResult.body[0]).toMatchObject(responsePostFirst.body)
+        expect(searchResult.body).not.toContainEqual(expect.objectContaining({ id: responsePostSecond.body.id }))
+
+
+    })
+
+    it('returns empty array for no results /GET', async () => {
+        const searchResult = await api
+            .get('/api/schedules/search?startDate=2026-05-05')
+            .expect(200)
+
+        expect(searchResult.body).toHaveLength(0)
+
+    })
+
+    it('returns 400 with invalid date query /GET', async () => {
+        await api
+            .get('/api/schedules/search?startDate=2026-25-05')
+            .expect(400)
+
     })
 })
