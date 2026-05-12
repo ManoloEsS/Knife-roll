@@ -4,13 +4,14 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 
 const api = supertest(app)
 
-describe('/api/stations', () => {
-    beforeAll(connectDb)
+beforeAll(connectDb)
 
-    afterAll(async () => {
-        await clearDb()
-        await disconnectDb()
-    })
+afterAll(async () => {
+    await clearDb()
+    await disconnectDb()
+})
+
+describe('/api/stations', () => {
 
     beforeEach(async () => {
         await clearDb()
@@ -43,7 +44,7 @@ describe('/api/stations', () => {
             .get('/api/stations')
             .expect(200)
 
-        expect(stations.body.sort((a, b) => a.name.localeCompare(b.name)))
+        expect(stations.body.sort((a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name)))
             .toMatchObject([{ name: 'grill' }, { name: 'pantry' }, { name: 'sautee' }])
 
     })
