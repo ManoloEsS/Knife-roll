@@ -28,6 +28,7 @@ model User {
   schedules Schedule[]
   scheduledHours Int @default(0) @map("scheduled_hours")
   shifts Shift[]
+  basePayRate Decimal @default(0) @map("base_pay_rate")
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("users")
