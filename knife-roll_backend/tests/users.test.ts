@@ -49,11 +49,12 @@ describe('/api/users', () => {
             .get(`/api/users/${id}`)
             .expect(200)
 
-        expect(response.body).toMatchObject(userResponse.body)
-        expect(response.body.password).toBeUndefined()
+        const { id: userId, email, name, admin } = response.body
+        expect(userResponse.body).toEqual({ id: userId, email, name, admin })
+        expect(userResponse.body.password).toBeUndefined()
     })
 
-    it('gets an array of users /POST', async () => {
+    it('gets an array of users /GET', async () => {
         const firstResponse = await api
             .post('/api/users')
             .send({
