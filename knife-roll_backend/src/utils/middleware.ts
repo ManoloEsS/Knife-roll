@@ -1,7 +1,6 @@
 import morgan from 'morgan'
 import { NextFunction, Request, Response } from 'express'
 import { Prisma } from '../generated/prisma/client'
-import { CreateShiftSchema } from './schemas'
 import { z } from 'zod'
 
 morgan.token('body', (req: Request) => {

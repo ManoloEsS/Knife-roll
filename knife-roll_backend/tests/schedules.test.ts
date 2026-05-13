@@ -1,7 +1,6 @@
 import { app, connectDb, disconnectDb, clearDb, createAdmin } from './helpers/setup'
 import supertest from 'supertest'
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { ShiftTime } from '../src/generated/prisma/enums'
 
 const api = supertest(app)
 
@@ -243,7 +242,7 @@ describe('/api/schedules/:scheduleStartDate/shifts', () => {
     })
 
     it('creates a valid shift /POST', async () => {
-        const schedRes = await api
+        await api
             .post('/api/schedules')
             .send({
                 startDate: '2026-05-05',
@@ -252,14 +251,14 @@ describe('/api/schedules/:scheduleStartDate/shifts', () => {
             })
             .expect(201)
 
-        const response = await api
+        await api
             .post('/api/stations')
             .send({
                 name: 'grill'
             })
             .expect(201)
 
-        const shiftRes = await api
+        await api
             .post('/api/schedules/2026-05-05/shifts')
             .send({
                 shiftTime: 'dinner',
