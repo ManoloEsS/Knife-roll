@@ -21,15 +21,12 @@ export const CreateUserSchema = z.object({
 
 
 export const CreateShiftSchema = z.object({
-    startTime: z.iso.datetime(),
-    endTime: z.iso.datetime(),
+    shiftTime: z.enum(['breakfast', 'lunch', 'dinner']).default('breakfast'),
+    date: z.iso.date(),
     stationName: z.string().min(1),
     incentive: z.number().nonnegative().multipleOf(0.01).nullable().optional(),
     userId: z.number().int().optional(),
-    status: z.enum(['available', 'assigned', 'pending']).default('available')
-}).refine(data => data.endTime >= data.startTime, {
-    message: 'endTime must be greater than or equal to startTime',
-    path: ['endTime'],
+    status: z.enum(['available', 'assigned', 'pending']).default('available'),
 })
 
 export const CreateStationSchema = z.object({

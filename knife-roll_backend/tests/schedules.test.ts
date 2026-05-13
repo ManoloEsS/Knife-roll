@@ -174,7 +174,7 @@ describe('/api/schedules', () => {
             .get('/api/schedules')
             .expect(200)
 
-        expect(responseGet.body.sort((a, b) => a.startDate.localeCompare(b.startDate)))
+        expect(responseGet.body.sort((a: { startDate: string }, b: { startDate: string }) => a.startDate.localeCompare(b.startDate)))
             .toMatchObject([responsePostFirst.body, responsePostSecond.body])
     })
 
@@ -229,4 +229,46 @@ describe('/api/schedules', () => {
             .expect(400)
 
     })
+
+})
+
+describe('/api/schedules/:scheduleStartDate/shifts', () => {
+    let userId: number
+
+    beforeEach(async () => {
+        await clearDb()
+        const user = await createAdmin()
+        userId = user.id
+    })
+
+    it('creates a valid shift /POST', async () => {
+        await api
+            .post('/api/schedules')
+            .send({
+                startDate: '2026-05-05',
+                endDate: '2026-05-11',
+                createdBy: userId,
+            })
+            .expect(201)
+
+        await api
+            .post('/api/stations')
+            .send({
+                name: 'grill'
+            })
+            .expect(201)
+
+        await api
+            .post('/api/schedules/2026-05-05/shifts')
+            .send({
+                shiftTime: 'dinner',
+                date: '2026-05-07',
+                stationName: 'grill',
+                incentive: 2.0,
+            })
+            .expect(201)
+
+    })
+
+    // TODO: write more tests here
 })

@@ -18,6 +18,12 @@ enum ShiftStatus {
   pending
 }
 
+enum ShiftTime {
+  breakfast
+  lunch
+  dinner
+}
+
 model User {
   id Int @id @default(autoincrement())
   email String @unique
@@ -44,19 +50,20 @@ model Schedule {
   user User @relation(fields: [createdBy], references: [id], onDelete: Restrict)
   shifts Shift[]
 
+  @@unique([startDate])
   @@map("schedules")
 }
 
 model Shift {
   id Int @id @default(autoincrement())
   createdAt DateTime @default(now()) @map("created_at")
-  startTime DateTime @map("start_time")
-  endTime DateTime @map("end_time")
+  shiftTime ShiftTime @map("shift_time")
+  date DateTime
   scheduleId Int @map("schedule_id")
   userId Int? @map("user_id") 
   stationName String @map("station")
   status ShiftStatus @default(available)
-  incentive Float? @default(0)
+  incentive Decimal? @default(0)
 
   schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)

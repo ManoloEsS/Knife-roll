@@ -39,7 +39,7 @@ export const errorHandler = (error: Error, _req: Request, res: Response, next: N
     next(error)
 }
 
-export const validate = (schema: z.ZodSchema) => {
+export const validateInputSchema = (schema: z.ZodSchema) => {
     return (req: Request, res: Response, next: NextFunction) => {
         const parsed = schema.safeParse(req.body)
         if (!parsed.success) {
