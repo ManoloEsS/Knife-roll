@@ -11,6 +11,7 @@ export default defineConfig({
             DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/knife_roll_test',
             DB_SSL: 'false',
             DEFAULT_PASSWORD: 'SharpKnife45!',
+            JWT_SECRET: 'testsecret',
         },
     },
 })

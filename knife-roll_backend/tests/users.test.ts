@@ -87,4 +87,14 @@ describe('/api/users', () => {
 
     })
 
+    // US-6: Change password
+    it('changes password /POST', async () => {
+        // TODO: Implement (US-6)
+    })
+
+    // US-12: Update employee info
+    it('updates employee info /PATCH', async () => {
+        // TODO: Implement (US-12)
+    })
+
 })
