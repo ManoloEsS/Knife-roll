@@ -12,6 +12,10 @@ const scheduleStartDateSchema = z.object({
     scheduleStartDate: z.iso.date(),
 })
 
+const _scheduleIdSchema = z.object({
+    id: z.coerce.number().int().positive(),
+})
+
 export const schedulesRouter = express.Router()
 
 schedulesRouter.get('/', async (_req: Request, res: Response) => {
@@ -79,8 +83,6 @@ schedulesRouter.post('/:scheduleStartDate/shifts', validateInputSchema(CreateShi
             return res.status(404).json({ error: 'Schedule not found' })
         }
 
-
-
         if (new Date(req.body.date) < schedule.startDate || new Date(req.body.date) > schedule.endDate) {
             return res.status(400).json({ error: 'Shift date must be within schedule date' })
         }
@@ -99,3 +101,38 @@ schedulesRouter.post('/:scheduleStartDate/shifts', validateInputSchema(CreateShi
 
         res.status(201).json(shift)
     })
+
+// US-9: Get single schedule with shifts
+schedulesRouter.get('/:id', async (req: Request, res: Response) => {
+    // TODO: Implement (US-9)
+    // - Validate id from params
+    // - Find schedule by ID with include: { shifts: true }
+    // - Return 404 if not found
+    // - Return schedule with nested shifts
+    res.status(501).json({ error: 'Not implemented' })
+})
+
+// US-16: Update schedule
+schedulesRouter.patch('/:id', async (req: Request, res: Response) => {
+    // TODO: Implement (US-16)
+    // - Validate id from params
+    // - Validate request body with UpdateScheduleSchema
+    // - At least one field required (startDate or endDate)
+    // - If both provided, endDate >= startDate
+    // - If only endDate, must be >= existing startDate
+    // - If only startDate, must be <= existing endDate
+    // - Find schedule by ID, return 404 if not found
+    // - Update and return 200
+    res.status(501).json({ error: 'Not implemented' })
+})
+
+// US-11: Delete schedule
+schedulesRouter.delete('/:id', async (req: Request, res: Response) => {
+    // TODO: Implement (US-11)
+    // - Validate id from params
+    // - Find schedule by ID, return 404 if not found
+    // - If schedule has shifts and ?confirm=true not passed, return 409 with shiftCount
+    // - If confirm=true or no shifts, delete and return 204
+    // - Prisma onDelete: Cascade handles shift deletion
+    res.status(501).json({ error: 'Not implemented' })
+})

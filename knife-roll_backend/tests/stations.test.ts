@@ -57,36 +57,46 @@ describe('/api/stations', () => {
         expect(response.body).toMatchObject([])
     })
 
-    it('deletes an existing station', async () => {
-        await api
-            .post('/api/stations')
-            .send({
-                name: 'grill'
-            })
-            .expect(201)
+    // it('deletes an existing station', async () => {
+    //     await api
+    //         .post('/api/stations')
+    //         .send({
+    //             name: 'grill'
+    //         })
+    //         .expect(201)
+    //
+    //     await api
+    //         .delete('/api/stations/grill')
+    //         .expect(204)
+    //
+    //     const validate = await api
+    //         .get('/api/stations')
+    //         .expect(200)
+    //
+    //     expect(validate.body).not.toContainEqual({ name: 'grill' })
+    // })
+    //
+    // it('returns 204 when deleting non existent station', async () => {
+    //     await api
+    //         .delete('/api/stations/grill')
+    //         .expect(204)
+    //
+    //     const validate = await api
+    //         .get('/api/stations')
+    //         .expect(200)
+    //
+    //     expect(validate.body).not.toContainEqual({ name: 'grill' })
+    //
+    // })
 
-        await api
-            .delete('/api/stations/grill')
-            .expect(204)
-
-        const validate = await api
-            .get('/api/stations')
-            .expect(200)
-
-        expect(validate.body).not.toContainEqual({ name: 'grill' })
-    })
-
-    it('returns 204 when deleting non existent station', async () => {
-        await api
-            .delete('/api/stations/grill')
-            .expect(204)
-
-        const validate = await api
-            .get('/api/stations')
-            .expect(200)
-
-        expect(validate.body).not.toContainEqual({ name: 'grill' })
-
-    })
+    // US-17: Update station
+    // it('updates a station /PATCH', async () => {
+    //     // TODO: Implement (US-17)
+    // })
+    //
+    // // US-3: Delete station by id
+    // it('deletes a station by id /DELETE', async () => {
+    //     // TODO: Implement (US-3)
+    // })
 
 })

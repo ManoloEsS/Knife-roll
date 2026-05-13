@@ -230,6 +230,16 @@ describe('/api/schedules', () => {
 
     })
 
+    // US-9: Get single schedule
+    it('gets a single schedule by id /GET', async () => {
+        // TODO: Implement (US-9)
+    })
+
+    // US-16: Update schedule
+    it('updates a schedule /PATCH', async () => {
+        // TODO: Implement (US-16)
+    })
+
 })
 
 describe('/api/schedules/:scheduleStartDate/shifts', () => {

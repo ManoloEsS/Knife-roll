@@ -53,3 +53,31 @@ usersRouter.post('/', validateInputSchema(CreateUserSchema), async (req: Request
     res.status(201).json(userWithoutPassword)
 })
 
+// US-6: Change password
+usersRouter.post('/:id/password', async (req: Request, res: Response) => {
+    // TODO: Implement (US-6)
+    // - Validate id from params
+    // - Validate request body with ChangePasswordSchema
+    // - Requires authenticated user (JWT middleware)
+    // - :id must match authenticated user's ID (can only change own password)
+    // - Find user by ID
+    // - Compare currentPassword with stored hash using bcrypt
+    // - Return 401 if currentPassword is incorrect
+    // - Hash newPassword and update user
+    // - Set mustChangePassword to false
+    // - Return 204
+    res.status(501).json({ error: 'Not implemented' })
+})
+
+// US-12: Update employee info
+usersRouter.patch('/:id', async (req: Request, res: Response) => {
+    // TODO: Implement (US-12)
+    // - Validate id from params
+    // - Validate request body with UpdateUserSchema
+    // - At least one field required (email, name, admin, basePayRate)
+    // - Find user by ID, return 404 if not found
+    // - Update user fields
+    // - Return 200 with updated user (without password)
+    res.status(501).json({ error: 'Not implemented' })
+})
+

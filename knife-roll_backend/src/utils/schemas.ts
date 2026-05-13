@@ -39,36 +39,33 @@ export const CreateStationSchema = z.object({
 // DropShiftSchema (US-15)
 // (no body needed - empty)
 
-// ChangePasswordSchema
+// ChangePasswordSchema (US-6)
 // - currentPassword: z.string()
 // - newPassword: z.string().min(8)
-// - strict()
 
-// LoginSchema
-// - email: z.string().email()
-// - password: z.string()
-// - strict()
+export const LoginSchema = z.object({
+    email: z.email(),
+    password: z.string(),
+})
 
-// UpdateScheduleSchema
-// - startDate: z.string().date().optional()
-// - endDate: z.string().date().optional()
+// UpdateScheduleSchema (US-16)
+// - startDate: z.iso.date().optional()
+// - endDate: z.iso.date().optional()
 // - refinement: if both provided, endDate >= startDate
-// - strict()
+// - at least one field required
 
-// UpdateStationSchema
+// UpdateStationSchema (US-17)
 // - name: z.string().min(1)
-// - strict()
 
-// UpdateUserSchema
+// UpdateUserSchema (US-12)
 // - email: z.string().email().optional()
 // - name: z.string().optional()
 // - admin: z.boolean().optional()
 // - basePayRate: z.number().positive().multipleOf(0.01).nullable().optional()
-// - strict()
+// - at least one field required
 
-// UpdateShiftSchema
+// UpdateShiftSchema (US-7, US-8)
 // - userId: z.number().int().nullable().optional()
 // - status: z.enum(['available', 'assigned', 'pending']).optional()
 // - incentive: z.number().positive().multipleOf(0.01).nullable().optional()
-// - strict()
 // - at least one field required
