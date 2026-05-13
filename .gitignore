@@ -53,3 +53,6 @@ temp/
 
 /generated/prisma
 
+# Session files
+session-*.md
+
