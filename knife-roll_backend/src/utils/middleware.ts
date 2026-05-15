@@ -1,20 +1,12 @@
-import morgan from 'morgan'
 import { NextFunction, Request, Response } from 'express'
 import { Prisma } from '../generated/prisma/client'
 import { z } from 'zod'
 
-morgan.token('body', (req: Request) => {
-    if (!req.body || typeof req.body !== 'object') {
-        return ''
-    }
-    return JSON.stringify(req.body)
-})
-
-export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
-    if (req.method === 'POST') {
-        morgan(':method :url :status :res[content-length] - :response-time ms :body')(req, res, next)
-    } else {
-        morgan('tiny')(req, res, next)
+export class AppError extends Error {
+    statusCode: number
+    constructor(statusCode: number, message: string) {
+        super(message)
+        this.statusCode = statusCode
     }
 }
 
@@ -22,8 +14,10 @@ export const unknownEndpoint = (_req: Request, res: Response) => {
     res.status(404).send({ error: 'unknown endpoint' })
 }
 
-export const errorHandler = (error: Error, _req: Request, res: Response, next: NextFunction) => {
-    console.error(error.message)
+export const errorHandler = (error: Error, _req: Request, res: Response, _next: NextFunction) => {
+    if (error instanceof AppError) {
+        return res.status(error.statusCode).json({ error: error.message })
+    }
 
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
@@ -36,10 +30,11 @@ export const errorHandler = (error: Error, _req: Request, res: Response, next: N
             return res.status(400).json({ error: 'Foreign key constraint failed' })
         }
     }
-    next(error)
+
+    return res.status(500).json({ error: 'internal server error' })
 }
 
-export const validateInputSchema = (schema: z.ZodSchema) => {
+export const validateInput = (schema: z.ZodSchema) => {
     return (req: Request, res: Response, next: NextFunction) => {
         const parsed = schema.safeParse(req.body)
         if (!parsed.success) {

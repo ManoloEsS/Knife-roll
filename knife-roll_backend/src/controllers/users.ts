@@ -1,9 +1,10 @@
 import express, { Response, Request } from 'express'
 import { prisma } from '../utils/db'
-import { validateInputSchema } from '../utils/middleware'
+import { validateInput } from '../utils/middleware'
 import { CreateUserSchema } from '../utils/schemas'
 import bcrypt from 'bcrypt'
 import { z } from 'zod'
+import { AppError } from '../utils/middleware'
 
 const userIdSchema = z.object({
     id: z.coerce.number().int().positive(),
@@ -32,17 +33,17 @@ usersRouter.get('/:id', async (req: Request, res: Response) => {
     })
 
     if (!user) {
-        return res.status(404).json({ error: 'User not found' })
+        throw new AppError(404, 'user not found')
     }
 
 
     res.json(user)
 })
 
-usersRouter.post('/', validateInputSchema(CreateUserSchema), async (req: Request, res: Response) => {
+usersRouter.post('/', validateInput(CreateUserSchema), async (req: Request, res: Response) => {
     const defaultPassword = process.env.DEFAULT_PASSWORD
     if (!defaultPassword) {
-        return res.status(500).json({ error: 'Default password not configured' })
+        throw new AppError(500, 'default password not configured')
     }
     const defaultPassHash = await bcrypt.hash(defaultPassword, 12)
 

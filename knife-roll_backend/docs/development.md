@@ -563,6 +563,34 @@ All future schema changes should create new migrations via `npm run db:migrate`.
 
 ---
 
+## Logging: Pino over Morgan
+
+**Decision:** We replaced Morgan with Pino (`pino` + `pino-http`). Morgan only formats strings — it logs method, path, status, and response time as plain text, with no structured logging or log-level filtering. `pino-http` does everything Morgan does (method, path, status, response time) but with structured JSON output and proper log levels. Pino also includes `pino-pretty` for human-readable dev output and supports multi-transport targets (e.g., debug to console, info+ to file), matching the pattern used in other services.
+
+```ts
+import pino from 'pino'
+import pinoHttp from 'pino-http'
+
+const logger = pino({ level: 'debug' })
+app.use(pinoHttp({ logger }))
+```
+
+For development, `pino-pretty` provides Morgan-style readability:
+
+```ts
+const logger = pino({
+  level: 'debug',
+  transport: {
+    targets: [
+      { target: 'pino-pretty', level: 'debug' },
+      { target: 'pino/file', options: { destination: './app.log' }, level: 'info' }
+    ]
+  }
+})
+```
+
+---
+
 ## TODO: Render Deployment Setup
 
 - [ ] Add `db:deploy:prod` script (`prisma migrate deploy` without dotenv)
@@ -572,3 +600,14 @@ All future schema changes should create new migrations via `npm run db:migrate`.
 - [ ] Set up Render build command (may need monorepo-specific adjustments)
 - [ ] Review `prisma.config.ts` behavior without `.env` file
 - [ ] Test the full deployment flow on Render
+
+## TODO: Replace Morgan with Pino
+
+- [ ] Install `pino` and `pino-http` (replace `morgan` and `@types/morgan`)
+- [ ] Rewrite `src/utils/logger.ts` — export a pino logger instance with structured JSON output
+- [ ] Replace `requestLogger` middleware with `pino-http` in `src/utils/middleware.ts`
+- [ ] Remove morgan import and custom `:body` token logic
+- [ ] Replace all `console.log` / `console.error` calls with pino logger methods
+- [ ] Add `pino-pretty` as dev dependency for human-readable dev output
+- [ ] Update `package.json` scripts if needed for dev/production log config
+- [ ] Remove `morgan` and `@types/morgan` from dependencies

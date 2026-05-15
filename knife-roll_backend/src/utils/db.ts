@@ -1,10 +1,17 @@
 import { PrismaClient } from '../generated/prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import pg from 'pg'
+import { logger } from './logger'
 
-const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DB_SSL === 'false' ? false : true,
-})
-const adapter = new PrismaPg(pool)
-export const prisma = new PrismaClient({ adapter })
+export let prisma: PrismaClient
+
+export async function initDb(dbUrl: string, dbSsl: boolean) {
+    const pool = new pg.Pool({
+        connectionString: dbUrl,
+        ssl: dbSsl,
+    })
+    const adapter = new PrismaPg(pool)
+    prisma = new PrismaClient({ adapter })
+    await prisma.$connect()
+    logger.info('Successfully connected to db')
+}

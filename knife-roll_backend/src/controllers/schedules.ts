@@ -1,8 +1,9 @@
 import express, { Response, Request } from 'express'
 import { prisma } from '../utils/db'
-import { validateInputSchema } from '../utils/middleware'
+import { validateInput } from '../utils/middleware'
 import { CreateScheduleSchema, CreateShiftSchema } from '../utils/schemas'
 import { z } from 'zod'
+import { AppError } from '../utils/middleware'
 
 const dateQuerySchema = z.object({
     startDate: z.iso.date(),
@@ -48,7 +49,7 @@ schedulesRouter.get('/search', async (req: Request, res: Response) => {
     res.json(schedules)
 })
 
-schedulesRouter.post('/', validateInputSchema(CreateScheduleSchema), async (req: Request, res: Response) => {
+schedulesRouter.post('/', validateInput(CreateScheduleSchema), async (req: Request, res: Response) => {
     const { startDate, endDate, createdBy } = req.body
 
     const schedule = await prisma.schedule.create({
@@ -62,7 +63,7 @@ schedulesRouter.post('/', validateInputSchema(CreateScheduleSchema), async (req:
     res.status(201).json(schedule)
 })
 
-schedulesRouter.post('/:scheduleStartDate/shifts', validateInputSchema(CreateShiftSchema),
+schedulesRouter.post('/:scheduleStartDate/shifts', validateInput(CreateShiftSchema),
     async (req: Request, res: Response) => {
         const parsed = scheduleStartDateSchema.safeParse(req.params)
         if (!parsed.success) {
@@ -80,11 +81,11 @@ schedulesRouter.post('/:scheduleStartDate/shifts', validateInputSchema(CreateShi
         })
 
         if (!schedule) {
-            return res.status(404).json({ error: 'Schedule not found' })
+            throw new AppError(404, 'schedule not found')
         }
 
         if (new Date(req.body.date) < schedule.startDate || new Date(req.body.date) > schedule.endDate) {
-            return res.status(400).json({ error: 'Shift date must be within schedule date' })
+            throw new AppError(400, 'shift date must be within schedule date')
         }
 
         const shift = await prisma.shift.create({
