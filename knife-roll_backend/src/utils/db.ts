@@ -5,12 +5,11 @@ import { logger } from './logger'
 
 export let prisma: PrismaClient
 
-export const initDb = async (dbUrl: string, dbSsl: boolean) => {
+export async function initDb(dbUrl: string, dbSsl: boolean) {
     const pool = new pg.Pool({
         connectionString: dbUrl,
         ssl: dbSsl,
     })
-
     const adapter = new PrismaPg(pool)
     prisma = new PrismaClient({ adapter })
     await prisma.$connect()

@@ -3,11 +3,13 @@ import { Prisma } from '../generated/prisma/client'
 import { z } from 'zod'
 
 export class AppError extends Error {
-    constructor(public statusCode: number, message: string) {
+    statusCode: number
+    constructor(statusCode: number, message: string) {
         super(message)
+        this.statusCode = statusCode
     }
-
 }
+
 export const unknownEndpoint = (_req: Request, res: Response) => {
     res.status(404).send({ error: 'unknown endpoint' })
 }

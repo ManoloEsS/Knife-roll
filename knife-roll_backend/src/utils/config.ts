@@ -7,7 +7,7 @@ export const config = {
 
 export function validateConfig() {
     const missing: string[] = []
-    if (!config.DATABASE_URL) missing.push('DATABSE_URL')
+    if (!config.DATABASE_URL) missing.push('DATABASE_URL')
     if (!config.JWT_SECRET) missing.push('JWT_SECRET')
     if (missing.length > 0) {
         throw new Error(`Missing environment variables: ${missing.join(', ')}`)

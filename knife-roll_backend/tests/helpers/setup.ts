@@ -1,11 +1,12 @@
-import { prisma } from '../../src/utils/db'
+import { prisma, initDb } from '../../src/utils/db'
+import { config } from '../../src/utils/config'
 import bcrypt from 'bcrypt'
 import type { User } from '../../src/generated/prisma/client'
 
 export { app } from '../../src/app'
 
 export const connectDb = async () => {
-    await prisma.$connect()
+    await initDb(config.DATABASE_URL!, config.DB_SSL)
 }
 
 export const disconnectDb = async () => {
