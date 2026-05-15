@@ -1,15 +1,16 @@
 import express, { Response, Request } from 'express'
 import { LoginSchema } from '../utils/schemas'
-import { validateInputSchema } from '../utils/middleware'
+import { validateInput } from '../utils/middleware'
 import { prisma } from '../utils/db'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import { info } from '../utils/logger'
+import { AppError } from '../utils/middleware'
+import { config } from '../utils/config'
 
 export const authRouter = express.Router()
 
 // US-5: Log in
-authRouter.post('/login', validateInputSchema(LoginSchema), async (req: Request, res: Response) => {
+authRouter.post('/login', validateInput(LoginSchema), async (req: Request, res: Response) => {
     const { email, password } = req.body
     const user = await prisma.user.findUnique({
         where: {
@@ -18,25 +19,21 @@ authRouter.post('/login', validateInputSchema(LoginSchema), async (req: Request,
     })
 
     if (!user) {
-        return res.status(401).json({ error: 'invalid email or password' })
+        throw new AppError(401, 'invalid email or password')
     }
 
     const match = await bcrypt.compare(password, user.password)
     if (!match) {
-        return res.status(401).json({ error: 'invalid email or password' })
+        throw new AppError(401, 'invalid email or password')
     }
 
     if (user.mustChangePassword) {
-        info('implement redirect for password change')
+        req.log.debug('implement redirect for password change')
     }
 
-    const secret = process.env.JWT_SECRET
-    if (!secret) {
-        return res.status(500).json({ error: 'JWT_SECRET not defined' })
-    }
     const payload = { id: user.id, email: user.email, admin: user.admin }
 
-    const token = jwt.sign(payload, secret, {
+    const token = jwt.sign(payload, config.JWT_SECRET!, {
         expiresIn: '60min'
     })
 

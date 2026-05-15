@@ -1,7 +1,19 @@
 import { app } from './app'
-import { PORT } from './utils/config'
-import { info } from './utils/logger'
+import { config, validateConfig } from './utils/config'
+import { initDb } from './utils/db'
+import { logger } from './utils/logger'
 
-app.listen(PORT, () => {
-    info(`Server running on port ${PORT}`)
+
+const main = async () => {
+    validateConfig()
+    await initDb(config.DATABASE_URL!, config.DB_SSL)
+
+    app.listen(config.PORT, () => {
+        logger.info(`Server running on port ${config.PORT}`)
+    })
+}
+
+main().catch((err) => {
+    logger.fatal(err, 'startup failed')
+    setTimeout(() => process.exit(1), 100)
 })

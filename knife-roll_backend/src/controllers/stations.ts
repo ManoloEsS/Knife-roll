@@ -1,6 +1,6 @@
 import express, { Response, Request } from 'express'
 import { prisma } from '../utils/db'
-import { validateInputSchema } from '../utils/middleware'
+import { validateInput } from '../utils/middleware'
 import { CreateStationSchema } from '../utils/schemas'
 import { z } from 'zod'
 
@@ -20,7 +20,7 @@ stationsRouter.get('/', async (_req: Request, res: Response) => {
     res.json(stations)
 })
 
-stationsRouter.post('/', validateInputSchema(CreateStationSchema), async (req: Request, res: Response) => {
+stationsRouter.post('/', validateInput(CreateStationSchema), async (req: Request, res: Response) => {
     const { name } = req.body
     const station = await prisma.station.create({ data: { name } })
     res.status(201).json(station)
@@ -46,7 +46,7 @@ stationsRouter.post('/', validateInputSchema(CreateStationSchema), async (req: R
 //     // - Return 200 with updated station
 // })
 
-stationsRouter.post('/', validateInputSchema(CreateStationSchema), async (req: Request, res: Response) => {
+stationsRouter.post('/', validateInput(CreateStationSchema), async (req: Request, res: Response) => {
     const { name } = req.body
     const station = await prisma.station.create({ data: { name } })
     res.status(201).json(station)
