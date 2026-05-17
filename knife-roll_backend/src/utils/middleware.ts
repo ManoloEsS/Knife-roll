@@ -1,6 +1,12 @@
 import { NextFunction, Request, Response } from 'express'
 import { Prisma } from '../generated/prisma/client'
 import { z } from 'zod'
+import { logger } from './logger'
+import bcrypt from 'bcrypt'
+import { configDotenv } from 'dotenv'
+import jwt from 'jsonwebtoken'
+import { config } from './config'
+import { UserPayload } from '../types/express'
 
 export class AppError extends Error {
     statusCode: number
@@ -43,4 +49,21 @@ export const validateInput = (schema: z.ZodSchema) => {
         req.body = parsed.data
         next()
     }
+}
+
+export const validateJWT = (req: Request, _res: Response, next: NextFunction) => {
+    const authHeader = req.get('Authorization')
+    logger.debug("auth header present")
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return next(new AppError(401, 'Not authorized'))
+    }
+
+    try {
+        const decoded = jwt.verify(authHeader.slice(7), config.JWT_SECRET!)
+        req.user = decoded as UserPayload
+    } catch (err) {
+        return next(new AppError(401, 'Not authorized'))
+    }
+    next()
 }
