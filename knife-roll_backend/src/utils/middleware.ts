@@ -18,12 +18,14 @@ export const unknownEndpoint = (_req: Request, res: Response) => {
     res.status(404).send({ error: 'unknown endpoint' })
 }
 
-export const errorHandler = (error: Error, _req: Request, res: Response, _next: NextFunction) => {
+export const errorHandler = (error: Error, req: Request, res: Response, _next: NextFunction) => {
     if (error instanceof AppError) {
+        req.log.warn({ err: error }, error.message)
         return res.status(error.statusCode).json({ error: error.message })
     }
 
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        req.log.warn({ err: error }, error.code)
         if (error.code === 'P2002') {
             return res.status(409).json({ error: 'Duplicate entry', fields: error.meta?.target })
         }
@@ -35,6 +37,7 @@ export const errorHandler = (error: Error, _req: Request, res: Response, _next: 
         }
     }
 
+    req.log.error(error, 'unexpected error')
     return res.status(500).json({ error: 'internal server error' })
 }
 
