@@ -1,17 +1,18 @@
-import { User } from "../generated/prisma/client"
 
 export interface UserPayload {
-  id: number
-  email: string
-  name: string
-  admin: boolean
+    id: number
+    email: string
+    name: string
+    admin: boolean
 }
 
 declare global {
-  namespace Express {
-    interface Request {
-      user?: User
-      token?: string
+    // eslint-disable-next-line no-unused-vars
+    namespace Express {
+        // eslint-disable-next-line no-unused-vars
+        interface Request {
+            user?: UserPayload
+            token?: string
+        }
     }
-  }
 }

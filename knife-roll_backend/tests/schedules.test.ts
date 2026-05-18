@@ -1,8 +1,7 @@
-import { app, connectDb, disconnectDb, clearDb, createAdmin } from './helpers/setup'
-import supertest from 'supertest'
+import { api, connectDb, disconnectDb, clearDb, createAdmin, getAuthToken } from './helpers/setup'
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 
-const api = supertest(app)
+let token: string
 
 beforeAll(connectDb)
 afterAll(async () => {
@@ -17,11 +16,13 @@ describe('/api/schedules', () => {
         await clearDb()
         const user = await createAdmin()
         userId = user.id
+        token = await getAuthToken()
     })
 
     it('creates a valid schedule /POST', async () => {
         const response = await api
             .post('/api/schedules')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 startDate: '2026-05-05',
                 endDate: '2026-05-11',
@@ -38,6 +39,7 @@ describe('/api/schedules', () => {
     it('rejects missing startDate /POST', async () => {
         const response = await api
             .post('/api/schedules')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 endDate: '2026-05-11',
                 createdBy: userId,
@@ -50,6 +52,7 @@ describe('/api/schedules', () => {
     it('rejects missing endDate /POST', async () => {
         const response = await api
             .post('/api/schedules')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 startDate: '2026-05-05',
                 createdBy: userId,
@@ -62,6 +65,7 @@ describe('/api/schedules', () => {
     it('rejects endDate before startDate /POST', async () => {
         const response = await api
             .post('/api/schedules')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 startDate: '2026-05-11',
                 endDate: '2026-05-05',
@@ -75,6 +79,7 @@ describe('/api/schedules', () => {
     it('rejects invalid date format /POST', async () => {
         const response = await api
             .post('/api/schedules')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 startDate: 'not-a-date',
                 endDate: '2026-05-11',
@@ -88,6 +93,7 @@ describe('/api/schedules', () => {
     it('rejects non-existent createdBy user /POST', async () => {
         const response = await api
             .post('/api/schedules')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 startDate: '2026-05-05',
                 endDate: '2026-05-11',
@@ -101,6 +107,7 @@ describe('/api/schedules', () => {
     it('ignores extra fields /POST', async () => {
         const response = await api
             .post('/api/schedules')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 startDate: '2026-05-05',
                 endDate: '2026-05-11',
@@ -116,6 +123,7 @@ describe('/api/schedules', () => {
     it('retrieve empty schedule array /GET', async () => {
         const responseGet = await api
             .get('/api/schedules')
+            .set('Authorization', `Bearer ${token}`)
             .expect(200)
 
         expect(responseGet.body).toMatchObject([])
@@ -124,6 +132,7 @@ describe('/api/schedules', () => {
     it('retrieve valid schedule /GET', async () => {
         const responsePost = await api
             .post('/api/schedules')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 startDate: '2026-05-05',
                 endDate: '2026-05-11',
@@ -133,6 +142,7 @@ describe('/api/schedules', () => {
 
         const responseGet = await api
             .get('/api/schedules')
+            .set('Authorization', `Bearer ${token}`)
             .expect(200)
 
         expect(responseGet.body[0]).toMatchObject(responsePost.body)
@@ -154,6 +164,7 @@ describe('/api/schedules', () => {
     it('retrieve valid schedule list /GET', async () => {
         const responsePostFirst = await api
             .post('/api/schedules')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 startDate: '2026-05-05',
                 endDate: '2026-05-11',
@@ -163,6 +174,7 @@ describe('/api/schedules', () => {
 
         const responsePostSecond = await api
             .post('/api/schedules')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 startDate: '2026-06-05',
                 endDate: '2026-06-11',
@@ -172,6 +184,7 @@ describe('/api/schedules', () => {
 
         const responseGet = await api
             .get('/api/schedules')
+            .set('Authorization', `Bearer ${token}`)
             .expect(200)
 
         expect(responseGet.body.sort((a: { startDate: string }, b: { startDate: string }) => a.startDate.localeCompare(b.startDate)))
@@ -187,6 +200,7 @@ describe('/api/schedules', () => {
     it('returns searched for schedule /GET', async () => {
         const responsePostFirst = await api
             .post('/api/schedules')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 startDate: '2026-05-05',
                 endDate: '2026-05-11',
@@ -196,6 +210,7 @@ describe('/api/schedules', () => {
 
         const responsePostSecond = await api
             .post('/api/schedules')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 startDate: '2026-06-05',
                 endDate: '2026-06-11',
@@ -205,6 +220,7 @@ describe('/api/schedules', () => {
 
         const searchResult = await api
             .get('/api/schedules/search?startDate=2026-05-05')
+            .set('Authorization', `Bearer ${token}`)
             .expect(200)
 
         expect(searchResult.body).toHaveLength(1)
@@ -217,6 +233,7 @@ describe('/api/schedules', () => {
     it('returns empty array for no results /GET', async () => {
         const searchResult = await api
             .get('/api/schedules/search?startDate=2026-05-05')
+            .set('Authorization', `Bearer ${token}`)
             .expect(200)
 
         expect(searchResult.body).toHaveLength(0)
@@ -226,6 +243,7 @@ describe('/api/schedules', () => {
     it('returns 400 with invalid date query /GET', async () => {
         await api
             .get('/api/schedules/search?startDate=2026-25-05')
+            .set('Authorization', `Bearer ${token}`)
             .expect(400)
 
     })
@@ -249,11 +267,13 @@ describe('/api/schedules/:scheduleStartDate/shifts', () => {
         await clearDb()
         const user = await createAdmin()
         userId = user.id
+        token = await getAuthToken()
     })
 
     it('creates a valid shift /POST', async () => {
         await api
             .post('/api/schedules')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 startDate: '2026-05-05',
                 endDate: '2026-05-11',
@@ -263,6 +283,7 @@ describe('/api/schedules/:scheduleStartDate/shifts', () => {
 
         await api
             .post('/api/stations')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 name: 'grill'
             })
@@ -270,6 +291,7 @@ describe('/api/schedules/:scheduleStartDate/shifts', () => {
 
         await api
             .post('/api/schedules/2026-05-05/shifts')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 shiftTime: 'dinner',
                 date: '2026-05-07',

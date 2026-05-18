@@ -1,8 +1,7 @@
-import { app, connectDb, disconnectDb, clearDb, createAdmin } from './helpers/setup'
-import supertest from 'supertest'
+import { connectDb, disconnectDb, clearDb, createAdmin, getAuthToken } from './helpers/setup'
 import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest'
 
-const _api = supertest(app)
+let _token: string
 
 beforeAll(connectDb)
 
@@ -15,6 +14,7 @@ describe('/api/me', () => {
     beforeEach(async () => {
         await clearDb()
         await createAdmin()
+        _token = await getAuthToken()
     })
 
     it('returns authenticated user profile /GET', async () => {

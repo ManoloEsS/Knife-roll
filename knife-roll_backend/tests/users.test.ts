@@ -1,8 +1,7 @@
-import { app, connectDb, disconnectDb, clearDb, createAdmin } from './helpers/setup'
-import supertest from 'supertest'
+import { api, connectDb, disconnectDb, clearDb, createAdmin, getAuthToken } from './helpers/setup'
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 
-const api = supertest(app)
+let token: string
 
 beforeAll(connectDb)
 
@@ -15,11 +14,13 @@ describe('/api/users', () => {
     beforeEach(async () => {
         await clearDb()
         await createAdmin()
+        token = await getAuthToken()
     })
 
     it('creates a valid user /POST', async () => {
         const response = await api
             .post('/api/users')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 email: 'test@test.com',
                 name: 'Test User',
@@ -37,6 +38,7 @@ describe('/api/users', () => {
     it('gets a single user /GET', async () => {
         const response = await api
             .post('/api/users')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 email: 'test@test.com',
                 name: 'Test User',
@@ -47,6 +49,7 @@ describe('/api/users', () => {
         const id = response.body.id
         const userResponse = await api
             .get(`/api/users/${id}`)
+            .set('Authorization', `Bearer ${token}`)
             .expect(200)
 
         const { id: userId, email, name, admin } = response.body
@@ -57,6 +60,7 @@ describe('/api/users', () => {
     it('gets an array of users /GET', async () => {
         const firstResponse = await api
             .post('/api/users')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 email: 'test1@test.com',
                 name: 'Test User',
@@ -66,6 +70,7 @@ describe('/api/users', () => {
 
         const secondResponse = await api
             .post('/api/users')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 email: 'test2@test.com',
                 name: 'Test User',
@@ -75,6 +80,7 @@ describe('/api/users', () => {
 
         const users = await api
             .get('/api/users')
+            .set('Authorization', `Bearer ${token}`)
             .expect(200)
 
         expect(users.body).toHaveLength(3)

@@ -4,7 +4,6 @@ import { z } from 'zod'
 import jwt from 'jsonwebtoken'
 import { config } from './config'
 import { UserPayload } from '../types/express'
-import { prisma } from './db'
 
 export class AppError extends Error {
     statusCode: number
@@ -67,7 +66,7 @@ export const tokenExtractor = (req: Request, _res: Response, next: NextFunction)
     next()
 }
 
-export const userExtractor = async (req: Request, _res: Response, next: NextFunction) => {
+export const userExtractor = (req: Request, _res: Response, next: NextFunction) => {
     if (!req.token) {
         throw new AppError(401, 'Not authorized')
     }
@@ -83,17 +82,7 @@ export const userExtractor = async (req: Request, _res: Response, next: NextFunc
         throw new AppError(401, 'Not authorized')
     }
 
-    const user = await prisma.user.findUnique({
-        where: {
-            id: decoded.id
-        }
-    })
-
-    if (!user) {
-        throw new AppError(401, 'User not found')
-    }
-
-    req.user = user
+    req.user = decoded
 
     next()
 }
