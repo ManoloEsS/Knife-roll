@@ -1,8 +1,7 @@
-import { app, connectDb, disconnectDb, clearDb, createAdmin } from './helpers/setup'
-import supertest from 'supertest'
+import { api, connectDb, disconnectDb, clearDb, createAdmin, getAuthToken } from './helpers/setup'
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 
-const api = supertest(app)
+let token: string
 
 beforeAll(connectDb)
 
@@ -16,11 +15,13 @@ describe('/api/stations', () => {
     beforeEach(async () => {
         await clearDb()
         await createAdmin()
+        token = await getAuthToken()
     })
 
     it('creates a valid station', async () => {
         const response = await api
             .post('/api/stations')
+            .set('Authorization', `Bearer ${token}`)
             .send({
                 name: 'grill'
             })
@@ -34,6 +35,7 @@ describe('/api/stations', () => {
         for (const s of ['grill', 'sautee', 'pantry']) {
             await api
                 .post('/api/stations')
+                .set('Authorization', `Bearer ${token}`)
                 .send({
                     name: s
                 })
@@ -42,6 +44,7 @@ describe('/api/stations', () => {
 
         const stations = await api
             .get('/api/stations')
+            .set('Authorization', `Bearer ${token}`)
             .expect(200)
 
         expect(stations.body.sort((a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name)))
@@ -52,6 +55,7 @@ describe('/api/stations', () => {
     it('retrieve empty stations array', async () => {
         const response = await api
             .get('/api/stations')
+            .set('Authorization', `Bearer ${token}`)
             .expect(200)
 
         expect(response.body).toMatchObject([])
@@ -60,6 +64,7 @@ describe('/api/stations', () => {
     // it('deletes an existing station', async () => {
     //     await api
     //         .post('/api/stations')
+    //         .set('Authorization', `Bearer ${token}`)
     //         .send({
     //             name: 'grill'
     //         })

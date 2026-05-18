@@ -591,6 +591,65 @@ const logger = pino({
 
 ---
 
+## Authentication: JWT Strategy
+
+**Decision:** JWT authentication uses a "fail closed" middleware pattern. All protected routes require valid authentication; requests without a valid token receive a `401 Unauthorized` response and the request is halted.
+
+### Why "Fail Closed" Over "Fail Open"
+
+We explicitly chose **not** to use the "fail open" pattern (setting `req.user = null` and continuing) because:
+
+1. **Security by default** — Protected routes cannot be accessed without valid authentication
+2. **No boilerplate in handlers** — Route handlers don't need to check `if (!req.user)` on every request
+3. **Prevents accidental leaks** — Easy to forget auth checks; middleware enforces it centrally
+
+### Middleware Flow
+
+```ts
+// validateJWT middleware
+if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  return next(new AppError(401, 'Not authorized')) // halt request
+}
+
+try {
+  const decoded = jwt.verify(token, JWT_SECRET)
+  req.user = decoded as UserPayload // attach typed user
+  next() // continue to handler
+} catch (err) {
+  return next(new AppError(401, 'Not authorized')) // halt on invalid/expired
+}
+```
+
+### Token Structure
+
+- **Payload:** `{ id: number, email: string, name: string, admin: boolean }`
+- **Expiration:** 60 minutes
+- **Storage:** Client-side (not persisted in DB — stateless JWT)
+- **Transport:** `Authorization: Bearer <token>` header
+
+### Type Safety
+
+User payload is typed via declaration merging in `src/types/express.d.ts`:
+
+```ts
+export interface UserPayload {
+  id: number
+  email: string
+  name: string
+  admin: boolean
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      user: UserPayload
+    }
+  }
+}
+```
+
+---
+
 ## TODO: Render Deployment Setup
 
 - [ ] Add `db:deploy:prod` script (`prisma migrate deploy` without dotenv)

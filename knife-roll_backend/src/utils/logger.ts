@@ -15,6 +15,10 @@ const streams = [
 
 export const logger = pino({
     level: 'debug',
+    redact: {
+        paths: ['req.body.password', 'body.password'],
+        censor: '[Redacted]',
+    },
     formatters: {
         level: (label) => {
             return { level: label.toUpperCase() }

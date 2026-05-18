@@ -9,7 +9,6 @@ import { config } from '../utils/config'
 
 export const authRouter = express.Router()
 
-// US-5: Log in
 authRouter.post('/login', validateInput(LoginSchema), async (req: Request, res: Response) => {
     const { email, password } = req.body
     const user = await prisma.user.findUnique({

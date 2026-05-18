@@ -1,8 +1,5 @@
-import { app, connectDb, disconnectDb, clearDb, createAdmin } from './helpers/setup'
-import supertest from 'supertest'
+import { api, connectDb, disconnectDb, clearDb, createAdmin } from './helpers/setup'
 import { expect, describe, it, beforeAll, afterAll, beforeEach } from 'vitest'
-
-const api = supertest(app)
 
 beforeAll(connectDb)
 

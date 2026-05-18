@@ -1,6 +1,9 @@
 import { NextFunction, Request, Response } from 'express'
 import { Prisma } from '../generated/prisma/client'
 import { z } from 'zod'
+import jwt from 'jsonwebtoken'
+import { config } from './config'
+import { UserPayload } from '../types/express'
 
 export class AppError extends Error {
     statusCode: number
@@ -14,12 +17,14 @@ export const unknownEndpoint = (_req: Request, res: Response) => {
     res.status(404).send({ error: 'unknown endpoint' })
 }
 
-export const errorHandler = (error: Error, _req: Request, res: Response, _next: NextFunction) => {
+export const errorHandler = (error: Error, req: Request, res: Response, _next: NextFunction) => {
     if (error instanceof AppError) {
+        req.log.warn({ err: error }, error.message)
         return res.status(error.statusCode).json({ error: error.message })
     }
 
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        req.log.warn({ err: error }, error.code)
         if (error.code === 'P2002') {
             return res.status(409).json({ error: 'Duplicate entry', fields: error.meta?.target })
         }
@@ -31,6 +36,7 @@ export const errorHandler = (error: Error, _req: Request, res: Response, _next: 
         }
     }
 
+    req.log.error(error, 'unexpected error')
     return res.status(500).json({ error: 'internal server error' })
 }
 
@@ -43,4 +49,40 @@ export const validateInput = (schema: z.ZodSchema) => {
         req.body = parsed.data
         next()
     }
+}
+
+const getTokenFrom = (request: Request): string | null => {
+    const authorization = request.get('Authorization')
+    if (authorization && authorization.startsWith('Bearer ')) {
+        return authorization.replace('Bearer ', '')
+    }
+    return null
+}
+
+export const tokenExtractor = (req: Request, _res: Response, next: NextFunction) => {
+    const token = getTokenFrom(req)
+    req.token = token ?? undefined
+
+    next()
+}
+
+export const userExtractor = (req: Request, _res: Response, next: NextFunction) => {
+    if (!req.token) {
+        throw new AppError(401, 'Not authorized')
+    }
+    let decoded: UserPayload
+    try {
+        decoded = jwt.verify(req.token, config.JWT_SECRET!) as UserPayload
+    } catch (err) {
+        req.log.error({ err }, 'JWT error')
+        throw new AppError(401, 'Not authorized')
+    }
+
+    if (!decoded.id) {
+        throw new AppError(401, 'Not authorized')
+    }
+
+    req.user = decoded
+
+    next()
 }
