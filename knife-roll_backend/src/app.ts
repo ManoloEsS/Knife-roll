@@ -1,5 +1,5 @@
 import express from 'express'
-import { unknownEndpoint, errorHandler } from './utils/middleware'
+import { unknownEndpoint, errorHandler, tokenExtractor, userExtractor } from './utils/middleware'
 import { router } from './controllers/index'
 import { healthRouter } from './controllers/health'
 import { usersRouter } from './controllers/users'
@@ -17,11 +17,11 @@ app.use(httpLogger)
 
 app.use('/', router)
 app.use('/health', healthRouter)
-app.use('/api/users', usersRouter)
-app.use('/api/schedules', schedulesRouter)
-app.use('/api/stations', stationsRouter)
+app.use('/api/users', tokenExtractor, userExtractor, usersRouter)
+app.use('/api/schedules', tokenExtractor, userExtractor, schedulesRouter)
+app.use('/api/stations', tokenExtractor, userExtractor, stationsRouter)
 app.use('/api/auth', authRouter)
-app.use('/api/me', meRouter)
+app.use('/api/me', tokenExtractor, userExtractor, meRouter)
 
 
 app.use(unknownEndpoint)
