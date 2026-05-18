@@ -1,12 +1,10 @@
 import { NextFunction, Request, Response } from 'express'
 import { Prisma } from '../generated/prisma/client'
 import { z } from 'zod'
-import { logger } from './logger'
-import bcrypt from 'bcrypt'
-import { configDotenv } from 'dotenv'
 import jwt from 'jsonwebtoken'
 import { config } from './config'
 import { UserPayload } from '../types/express'
+import { prisma } from './db'
 
 export class AppError extends Error {
     statusCode: number
@@ -51,19 +49,48 @@ export const validateInput = (schema: z.ZodSchema) => {
     }
 }
 
-export const validateJWT = (req: Request, _res: Response, next: NextFunction) => {
-    const authHeader = req.get('Authorization')
-    logger.debug("auth header present")
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return next(new AppError(401, 'Not authorized'))
+const getTokenFrom = (request: Request): string | null => {
+    const authorization = request.get('Authorization')
+    if (authorization && authorization.startsWith('Bearer ')) {
+        return authorization.replace('Bearer ', '')
     }
+    return null
+}
 
+export const tokenExtractor = (req: Request, _res: Response, next: NextFunction) => {
+    const token = getTokenFrom(req)
+    req.token = token ?? undefined
+
+    next()
+}
+
+export const userExtractor = async (req: Request, _res: Response, next: NextFunction) => {
+    if (!req.token) {
+        throw new AppError(401, 'Not authorized')
+    }
+    let decoded: UserPayload
     try {
-        const decoded = jwt.verify(authHeader.slice(7), config.JWT_SECRET!)
-        req.user = decoded as UserPayload
+        decoded = jwt.verify(req.token, config.JWT_SECRET!) as UserPayload
     } catch (err) {
-        return next(new AppError(401, 'Not authorized'))
+        req.log.error({ err }, 'JWT error')
+        throw new AppError(401, 'Not authorized')
     }
+
+    if (!decoded.id) {
+        throw new AppError(401, 'Not authorized')
+    }
+
+    const user = await prisma.user.findUnique({
+        where: {
+            id: decoded.id
+        }
+    })
+
+    if (!user) {
+        throw new AppError(401, 'User not found')
+    }
+
+    req.user = user
+
     next()
 }

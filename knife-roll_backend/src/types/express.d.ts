@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken'
+import { User } from "../generated/prisma/client"
 
 export interface UserPayload {
   id: number
@@ -10,7 +10,8 @@ export interface UserPayload {
 declare global {
   namespace Express {
     interface Request {
-      user: UserPayload
+      user?: User
+      token?: string
     }
   }
 }

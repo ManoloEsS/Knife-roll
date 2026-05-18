@@ -21,3 +21,4 @@ Thumbs.db
 
 coverage
 .nyc_output
+knife-roll_backend/docs/go_middleware_patterns.md
